@@ -57,7 +57,7 @@ void CC(int num){
             break;
     }
 }
-void code(){cout<<"这么强？！要不代码您来写？"<<endl;terminate();}
+void code(){cout<<"这么强？！要不代码您来写？https://github.com/SiriusChaos/Toys/blob/master/boring%20game/boring.cpp"<<endl;terminate();}
 bool deal(string str){
 	static int times=0;
 	if(str.size()==1){
