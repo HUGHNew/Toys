@@ -122,7 +122,7 @@ SetConsoleTitle("boring program");
 #else
     out("1:just have a look about the time\n2:to know the user\n3:NULL\n4:exit\n5:guess number game\nChoose one:");
 #endif
-    auto begin=time(0);
+    auto beg=time(0);
 #ifdef PLAT_NAME
 	out("先按回车后输入选项，然后再按回车确定");
 #else
@@ -140,7 +140,8 @@ SetConsoleTitle("boring program");
     out("You finally press \"Enter\"");
 #endif
 	string c;
-	if(time(0)-begin>15)lEc();
+	if(time(0)-beg>15)lEc();
+	beg=time(0);
 	getline(cin,c);
 	while(!deal(c)){
 #ifdef PLAT_NAME
@@ -154,28 +155,30 @@ SetConsoleTitle("boring program");
 }
 void numberGuess(){
     //out("请输入猜数上限:");
-    int maxNum=-1,timeOfGuess=-1,Wt=0;
-    while(maxNum){
+    int maxNum=0,timeOfGuess=0,Wt=0;
+    while(maxNum<=0){
     maxNum=input("请输入猜数上限:(PS数字都是非负整数，请正确输入)");
-    if(!maxNum)out("要玩就好好玩，别调戏程序啊");}
-    while(timeOfGuess){
+    if(maxNum<=0)out("要玩就好好玩，别调戏程序啊");}
+    while(timeOfGuess<=0){
         timeOfGuess=input("请输入猜的次数:");
-        if(!timeOfGuess){out("正经点！！");if(Wt){out("还能不能好好玩了？");terminate();}++Wt;}
+        if(timeOfGuess<=0){out("正经点！！");if(Wt){out("还能不能好好玩了？");terminate();}++Wt;}
     }
     if(!sizeJudge(maxNum,timeOfGuess))out("这么怕猜不中？");
     srand(time(0));
-    int number=rand(),g=input("来吧，开猜");
+    int number=rand()%maxNum,g=input("来吧，开猜");
     bool get=0;
-    while(timeOfGuess--){
-        if(guess(number,g)){break;get=1;}
-        else cout<<"go on:";
+    while(--timeOfGuess){
+        if(guess(number,g)){get=1;break;}
+        else g=input("go on:");
     }
-    if(!get)out("看来运气不好？");
+    if(get==0)out("游戏结束，看来运气不好？");
 }
 bool guess(int target,int num){
     if(num-target>10)out("大得离谱");
     else if(num-target>=5&&num-target<=10)out("大得不多了");
-    else if(num-target<5&&num-target>-5&&num!=target)out("马上就猜到了");
+    else if(num-target<5&&num-target>1)out("只大一点了");
+    else if(num-target<=1&&num-target>=-1&&num!=target)out("马上就猜到了");
+    else if(num-target<-1&&num-target>-5)out("只小一点了");
     else if(num==target){out("Congratulations!!");return true;}
     else if(num-target>=-10&&num-target<=-5)out("小得不多了");
     else if(num-target<-10)out("小得离谱");
