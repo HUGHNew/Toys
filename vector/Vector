@@ -1,0 +1,109 @@
+#ifndef _Own_Vector_
+#define _Own_Vector_ 1
+#include<iostream>
+#include<memory>
+template<typename T>
+class counter{
+    size_t count;
+    T*ptr;
+public:
+    counter()noexcept:count(1),ptr(nullptr){}
+    counter(counter&ct)noexcept:ptr(ct.ptr){ct.count++;count=ct.count;}
+    counter(T p)noexcept:ptr(new T(p)),count(1){}
+    ~counter()noexcept{
+        if(count==1){delete ptr;std::cout<<"deleted"<<std::endl;}
+        else --count;}
+    operator size_t(){return count;}
+    counter& operator++(){++count;return *this;}
+    void operator++(int){++count;}
+    counter& operator--(){--count;return *this;}
+    void operator--(int){--count;}
+    bool operator==(const counter&ct)noexcept{return ptr==ct.ptr;}
+    counter& operator=(counter&ct){
+        if(ct==*this)return *this;
+        else{
+            ct++;
+            if(count==1)delete ptr;;
+            ptr=ct.ptr;
+        }
+    }
+    T operator*(){
+        if(ptr!=nullptr)
+            return *ptr;
+        else{
+            std::cout<<"nullptr"<<std::endl;
+            throw;
+        } 
+    }
+};
+template<typename T>
+class Vec{
+    T* head;
+    size_t _size,Cap;
+    std::allocator<T> alloc;
+    const static int init=16;
+public:
+    class iterator{
+            T*ptr;
+        public:
+            iterator()noexcept:ptr(nullptr){}
+            iterator(T*p)noexcept:ptr(p){}
+            iterator& operator=(const iterator&it){
+                ptr=it.ptr;
+                return *this;
+            }
+            bool operator==(const iterator&it){return ptr==it.ptr;}
+            bool operator!=(const iterator&it){return ptr!=it.ptr;}
+            void operator++(int){ptr++;}
+            void operator--(int){ptr--;}
+            iterator& operator++(){ptr++;return *this;}
+            iterator& operator--(){ptr--;return *this;}
+            T operator*(){return *ptr;}
+    };
+    iterator begin(){return iterator(head);}
+    iterator end(){return iterator(head+_size);}
+    Vec():head(new T(init)),_size(0),Cap(16){}
+    Vec(std::initializer_list<T>il):Cap(il.size()*2),_size(il.size()){
+        head=alloc.allocate(Cap);
+        T*begin=head;
+        for(const T*mem=il.begin();mem!=il.end();++mem){
+            *head++=*mem;
+        }head=begin;
+    }
+    void clear(){
+        _size=0;
+    }
+    T& operator[](int index){
+        if(index>=_size||index<0)throw;
+        else return *(head+index);
+    }
+    void push_back(T elm){
+        if(_size<Cap){
+            *(head+_size)=elm;
+        }else{
+            Cap*=2;
+            try{
+            T*other=alloc.allocate(Cap);
+            T*mark=other;
+            for(T*b=head;b-head<Cap;b++){
+                *other++=*b;
+            }*other=elm;
+            this->~Vec();
+            head=mark;}catch(std::bad_alloc&Ballo){
+                std::cout<<Ballo.what()<<std::endl;
+            }
+        }
+            ++_size;
+    }
+    void pop_back(){
+        --_size;
+    }
+    size_t size(){return _size;}
+    size_t capability(){return Cap;}
+    bool empty(){return _size==0;}
+    ~Vec(){
+        alloc.destroy(head);
+        alloc.deallocate(head,Cap);
+    }
+};
+#endif _Own_Vector_
