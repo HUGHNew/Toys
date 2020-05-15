@@ -41,9 +41,6 @@ Complex operator""i(unsigned long long Vir)noexcept{
 Complex operator+(long double ld,const Complex&Cx){
     return Complex(Cx.Real+ld,Cx.Vir);
 }
-// Complex operator-(const Complex&Cpx,const Complex&Cx){
-//     return Complex(Cpx.Real-Cx.Real,Cpx.Real-Cx.Vir);
-// }
 Complex operator-(const Complex&Cx){
     return Complex(-Cx.Real,-Cx.Vir);
 }
@@ -51,9 +48,10 @@ std::ostream& operator<<(std::ostream&os,const Complex&Cx)noexcept{
     bool seq=(Cx.Real!=0);
     if(seq)os<<Cx.Real;
     if(Cx.Vir!=0){
-        os<<(Cx.Vir>0?"+":"")<<Cx.Vir<<"i";
+        os<<(Cx.Vir>0?(Cx.Real==0?"":"+"):"")
+            <<(Cx.Vir==1?"":(Cx.Vir==-1?"-":std::to_string(Cx.Vir)))<<"i";
         seq=false;
-    }else seq=true;
+    }else seq=(Cx.Real==0);
     if(seq){
         os<<0;
     }
@@ -62,43 +60,58 @@ std::ostream& operator<<(std::ostream&os,const Complex&Cx)noexcept{
 std::istream& operator>>(std::istream&is,Complex&Cx){
     std::string cpx;
     is>>cpx;
-    bool Finish[4]{false};
-    switch(cpx[0]){
-        case '+':Cx.Real=1;break;
-        case '-':Cx.Real=-1;break;
-        case 'i':Cx.Real=0;Cx.Vir=1;break;
-        default:
-            if(isdigit(cpx[0])){
-                Cx.Real=cpx[0]-'0';
-            }else{
-                throw Except("Unexpected charactor");
-            }
-    }
-    const std::string&cpx_sub=cpx.substr(1);
-    if(cpx_sub[cpx_sub.size()-1]!='i'){
-        Cx.Real=Cx.Real>0?std::stold(cpx_sub):-std::stold(cpx_sub);
+    if("0"==cpx){Cx.Real=0;Cx.Vir=0;return is;}
+    if(cpx[cpx.size()-1]!='i'){
+        if(std::string::npos!=cpx.find('.'))
+        Cx.Real=std::stold(cpx);
+        else Cx.Real=std::stoll(cpx);
         Cx.Vir=0;
-        return is;
-    }
-    if(cpx_sub.find('+')!=std::string::npos){
-        size_t pos=cpx_sub.find('+');
-        const std::string&RP=cpx_sub.substr(0,pos);
-        Cx.Real=Cx.Real>0?std::stold(RP):-std::stold(RP);
-        const std::string&VP=cpx_sub.substr(pos,cpx_sub.size()-pos-1);
-        Cx.Vir=std::stold(VP);
-    }
-    else if(cpx_sub.find('-')!=std::string::npos){
-        size_t pos=cpx_sub.find('-');
-        const std::string&RP=cpx_sub.substr(0,pos);
-        Cx.Real=Cx.Real>0?std::stold(RP):-std::stold(RP);
-        const std::string&VP=cpx_sub.substr(pos,cpx_sub.size()-pos-1);
-        Cx.Vir=-std::stold(VP);
     }else{
-        if(cpx_sub.find('i')!=std::string::npos){
-            Cx.Vir=Cx.Real;
+        int sign=1;
+        switch(cpx[0])
+        {
+        case 'i':
             Cx.Real=0;
+            Cx.Vir=1;
+            break;
+        case '-':// -Vi  -R op Vi
+        sign=-1;
+        default://s*R op Vi   s*Vi
+            bool inc=(sign!=1),in=false;
+            const std::string&cpx_sub=cpx.substr(inc,cpx.size()-1-inc);
+            if(cpx_sub.size()==0){Cx.Real=0;Cx.Vir=sign;return is;}
+            std::size_t pos=cpx_sub.find('-');
+            if(std::string::npos==pos)
+                pos=cpx_sub.find('+');
+            else{//s*R - Vi 
+                in=true;
+                if(std::string::npos!=cpx_sub.substr(0,pos).find('.'))
+                    Cx.Real=sign*std::stold(cpx_sub.substr(0,pos));
+                else Cx.Real=sign*std::stoll(cpx_sub.substr(0,pos));
+                if(pos==cpx_sub.size()-1)Cx.Vir=-1;
+                else if(std::string::npos!=cpx_sub.substr(pos+1).find('.'))
+                    Cx.Vir=-std::stold(cpx_sub.substr(pos+1));
+                else Cx.Vir=-std::stoll(cpx_sub.substr(pos+1));
+            }
+            if(std::string::npos==pos){//s*Vi
+                Cx.Real=0;
+                if(std::string::npos!=cpx_sub.find('.'))
+                    Cx.Vir=sign*std::stold(cpx_sub);
+                else Cx.Vir=sign*std::stoll(cpx_sub);
+            }
+            else if(!in){//s*R + Vi
+                if(std::string::npos!=cpx_sub.substr(0,pos).find('.'))
+                    Cx.Real=sign*std::stold(cpx_sub.substr(0,pos));
+                else Cx.Real=sign*std::stoll(cpx_sub.substr(0,pos));
+                if(pos==cpx_sub.size()-1)Cx.Vir=1;
+                else if(std::string::npos!=cpx_sub.substr(pos+1).find('.'))
+                    Cx.Vir=std::stold(cpx_sub.substr(pos+1));
+                else Cx.Vir=std::stoll(cpx_sub.substr(pos+1));
+            }
+            break;
         }
     }
+    return is;
 }
 template<typename T>Complex Complex::operator+(T v)noexcept{
     return Complex(Real+v,Vir);
