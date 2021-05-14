@@ -22,7 +22,7 @@ all are meaningless item
     -   an implement of Conway's game of life 2D
 -   login
     -   application layer protocol by Java
-    -   [details](./login/readme.md)
+    -   [details](https://github.com/HUGHOrg/Login-Protocol-Imp/readme.md)
 
 
 
